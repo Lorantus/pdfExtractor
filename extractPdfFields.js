@@ -1,6 +1,9 @@
 const fs = require('fs'),
-    promisify = require('./promisify'),
-    parsePdf = require('./pdfParser');
+    parsePdf = require('./pdfParser'),
+    {promisify} = require('util'),
+    path = require('path');
+
+const readdirAsync = promisify(fs.readdir);
 
 const extactor = (rootPath, i18nRegex) => {
     const parseFile = fileName =>
@@ -11,8 +14,8 @@ const extactor = (rootPath, i18nRegex) => {
                     .map(field => ({ ...({ id, value } = field), ...{ fileName } }))
             );
 
-    return promisify(fs.readdir)(rootPath)
-        .then(files => files.map(file => parseFile(rootPath + '/' + file)))
+    return readdirAsync(rootPath)
+        .then(files => files.map(file => parseFile(path.join(rootPath, file))))
         .then(p => Promise.all(p))
         .then(fieldFiles => {
             const errors = [];
